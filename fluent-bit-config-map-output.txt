@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush        1
+        Log_Level    info
+        Daemon       off
+
+    [INPUT]
+        Name              tail
+        Path              /var/log/containers/*.log
+        Parser            docker
+        Tag               kube.*
+        Mem_Buf_Limit     50MB
+
+    [OUTPUT]
+        Name              es
+        Match             kube.*
+        Host              <elasticsearch_host>
+        Port              9200
+        tls               on
+        tls.verify        off
+        tls.debug         off
+        HTTP_User         ${FLUENT_ELASTICSEARCH_USERNAME}
+        HTTP_Passwd       ${FLUENT_ELASTICSEARCH_PASSWORD}
+        Index             kubernetes
+        Logstash_Format   On
+        Retry_Limit       False
+        Type              kube
+
+    [FILTER]
+        Name              kubernetes
+        Match             kube.*
